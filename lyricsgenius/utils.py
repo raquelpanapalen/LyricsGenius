@@ -7,6 +7,7 @@ import unicodedata
 from datetime import datetime
 from string import punctuation
 from urllib.parse import parse_qs, urlparse
+from collections import Counter
 
 
 def auth_from_environment():
@@ -20,9 +21,9 @@ def auth_from_environment():
         Replaces variables that are not present with :obj:`None`.
 
     """
-    client_id = os.environ.get('GENIUS_CLIENT_ID')
-    redirect_uri = os.environ.get('GENIUS_REDIRECT_URI')
-    client_secret = os.environ.get('GENIUS_CLIENT_SECRET')
+    client_id = os.environ.get("GENIUS_CLIENT_ID")
+    redirect_uri = os.environ.get("GENIUS_REDIRECT_URI")
+    client_secret = os.environ.get("GENIUS_CLIENT_SECRET")
     return client_id, redirect_uri, client_secret
 
 
@@ -40,24 +41,24 @@ def convert_to_datetime(f):
         return None
 
     if isinstance(f, dict):
-        year = f.get('year')
-        month = f.get('month')
-        day = f.get('day')
+        year = f.get("year")
+        month = f.get("month")
+        day = f.get("day")
         if year and month:
-            date = '{year}-{month:02}'.format(year=year, month=month)
+            date = "{year}-{month:02}".format(year=year, month=month)
             if day:
-                date += '-{day:02}'.format(day=day)
+                date += "-{day:02}".format(day=day)
         elif year:
             date = str(year)
         else:
             return None
         f = date
 
-    if f.count('-') == 2:
+    if f.count("-") == 2:
         date_format = "%Y-%m-%d"
-    elif f.count('-') == 1:
+    elif f.count("-") == 1:
         date_format = "%Y-%m"
-    elif ',' in f:
+    elif "," in f:
         date_format = "%B %d, %Y"
     elif f.isdigit():
         date_format = "%Y"
@@ -81,7 +82,7 @@ def clean_str(s):
 
     """
     punctuation_ = punctuation + "’" + "\u200b"
-    string = s.translate(str.maketrans('', '', punctuation_)).strip().lower()
+    string = s.translate(str.maketrans("", "", punctuation_)).strip().lower()
     return unicodedata.normalize("NFKC", string)
 
 
@@ -99,10 +100,10 @@ def parse_redirected_url(url, flow):
         KeyError: if 'code'/'token' is not available or has multiple values.
 
     """
-    if flow == 'code':
+    if flow == "code":
         query = urlparse(url).query
-    elif flow == 'token':
-        query = re.sub(r'.*#access_', '', url)
+    elif flow == "token":
+        query = re.sub(r".*#access_", "", url)
     parameters = parse_qs(query)
     code = parameters.get(flow, None)
 
@@ -127,7 +128,7 @@ def safe_unicode(s):
         :obj:`str`
 
     """
-    return s.encode('utf-8').decode(sys.stdout.encoding, errors='replace')
+    return s.encode("utf-8").decode(sys.stdout.encoding, errors="replace")
 
 
 def sanitize_filename(f):
@@ -143,3 +144,22 @@ def sanitize_filename(f):
     """
     keepchars = (" ", ".", "_")
     return "".join(c for c in f if c.isalnum() or c in keepchars).rstrip()
+
+
+def have_common_element(list1, list2):
+    """Checks if two lists have a common element.
+
+    Args:
+        list1 (:obj:`list`): first list.
+        list2 (:obj:`list`): second list.
+
+    Returns:
+        :obj:`bool`: True if the lists have a common element, False otherwise.
+
+    """
+    counter1 = Counter(list1)
+    counter2 = Counter(list2)
+    for element, count in counter1.items():
+        if element in counter2 and count > 0:
+            return True
+    return False
